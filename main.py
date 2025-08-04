@@ -45,72 +45,66 @@ if csv_file is not None:
         if selected_columns:
             df_filtered = df[selected_columns]
             
-            # --- Text-based filters for specific columns ---
-            st.write("---") # Visual separator
-            st.write("### Route Filters")
+            st.write("---") 
+            # Changed title to be more generic
+            st.write("### Content Filters")
 
-            # Create a copy to apply text filters on
             df_text_filtered = df_filtered.copy()
 
-            # Filter for Departure Cities (only if the column was selected by the user)
+            # Filter for Departure Cities
             if "Condition Departure Cities" in df_text_filtered.columns:
                 departure_filter = st.text_input(
                     "Filter by Departure City (text contains):",
                     placeholder="e.g., LON"
                 )
-                # --- NEW: Checkbox to include blanks ---
                 show_blanks_departure = st.checkbox(
                     "Also include rows with a blank Departure City", key="blanks_dep"
                 )
 
                 if departure_filter:
-                    # Condition for matching the text
                     text_match = df_text_filtered["Condition Departure Cities"].str.contains(departure_filter, case=False, na=False)
-                    
                     if show_blanks_departure:
-                        # Condition for being blank (NaN)
                         is_blank = df_text_filtered["Condition Departure Cities"].isna()
-                        # Apply the combined OR condition
                         df_text_filtered = df_text_filtered[text_match | is_blank]
                     else:
-                        # Apply only the text match condition (original behavior)
                         df_text_filtered = df_text_filtered[text_match]
 
-
-            # Filter for Arrival Cities (only if the column was selected by the user)
+            # Filter for Arrival Cities
             if "Condition Arrival Cities" in df_text_filtered.columns:
                 arrival_filter = st.text_input(
                     "Filter by Arrival City (text contains):",
                     placeholder="e.g., LIS"
                 )
-                # --- NEW: Checkbox to include blanks ---
                 show_blanks_arrival = st.checkbox(
                     "Also include rows with a blank Arrival City", key="blanks_arr"
                 )
 
                 if arrival_filter:
-                    # Condition for matching the text
                     text_match = df_text_filtered["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)
-
                     if show_blanks_arrival:
-                        # Condition for being blank (NaN)
                         is_blank = df_text_filtered["Condition Arrival Cities"].isna()
-                        # Apply the combined OR condition
                         df_text_filtered = df_text_filtered[text_match | is_blank]
                     else:
-                        # Apply only the text match condition
                         df_text_filtered = df_text_filtered[text_match]
             
-            st.write("---") # Visual separator
+            # --- NEW: Filter for Provider Name ---
+            if "Provider Name" in df_text_filtered.columns:
+                provider_filter = st.text_input(
+                    "Filter by Provider Name (text contains):",
+                    placeholder="e.g., Lufthansa"
+                )
+                if provider_filter:
+                    df_text_filtered = df_text_filtered[df_text_filtered["Provider Name"].str.contains(provider_filter, case=False, na=False)]
+            # --- END OF NEW CODE ---
 
-            # Dropdown for selecting number of rows, now operates on the text-filtered dataframe
+            st.write("---")
+
             num_rows = st.selectbox(
                 "Select number of rows to display:",
                 options=[10, 50, 100, "All"],
                 index=0
             )
 
-            # Display logic now uses df_text_filtered
             if num_rows == "All":
                 st.write(f"### Displaying All Matching Rows ({len(df_text_filtered)})")
                 st.dataframe(df_text_filtered)
