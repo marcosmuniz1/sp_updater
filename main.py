@@ -16,9 +16,8 @@ if csv_file is not None:
         df = pd.read_csv(csv_file)
 
     except UnicodeDecodeError:
-        # If a decoding error occurs, try again with 'latin1'.
-        st.warning("Could not read file with default encoding, attempting with 'latin1'...")
-        # Reset the file pointer to the beginning before trying again.
+        # If a decoding error occurs, silently try again with 'latin1'.
+        # The user-facing warning message has been removed from here.
         csv_file.seek(0)
         try:
             df = pd.read_csv(csv_file, encoding='latin1')
@@ -46,7 +45,6 @@ if csv_file is not None:
             df_filtered = df[selected_columns]
             
             st.write("---") 
-            # Changed title to be more generic
             st.write("### Content Filters")
 
             df_text_filtered = df_filtered.copy()
@@ -87,7 +85,7 @@ if csv_file is not None:
                     else:
                         df_text_filtered = df_text_filtered[text_match]
             
-            # --- NEW: Filter for Provider Name ---
+            # Filter for Provider Name
             if "Provider Name" in df_text_filtered.columns:
                 provider_filter = st.text_input(
                     "Filter by Provider Name (text contains):",
@@ -95,7 +93,6 @@ if csv_file is not None:
                 )
                 if provider_filter:
                     df_text_filtered = df_text_filtered[df_text_filtered["Provider Name"].str.contains(provider_filter, case=False, na=False)]
-            # --- END OF NEW CODE ---
 
             st.write("---")
 
