@@ -23,21 +23,17 @@ if csv_file is not None:
         try:
             df = pd.read_csv(csv_file, encoding='latin1')
         except Exception as e:
-            # If 'latin1' also fails, display a generic error.
             st.error(f"Error: Unable to read the CSV file with 'latin1' encoding either. Details: {e}")
             df = None
     except Exception as e:
-        # Catch any other potential errors during the read process.
         st.error(f"Error: Unable to read the CSV file. Details: {e}")
         df = None
 
     if df is not None:
         st.success("File uploaded successfully!")
         
-        # Get the list of all column names from the DataFrame.
         all_columns = df.columns.tolist()
 
-        # Use an expander to create a dropdown-like container for the checkboxes.
         with st.expander("Select columns to display:", expanded=True):
             select_all = st.checkbox("Select All", value=True)
             
@@ -46,26 +42,53 @@ if csv_file is not None:
                 if st.checkbox(column, value=select_all, key=f"col_{column}"):
                     selected_columns.append(column)
 
-        # Filter the DataFrame to show only the selected columns.
         if selected_columns:
             df_filtered = df[selected_columns]
+            
+            # --- NEW: Text-based filters for specific columns ---
+            st.write("---") # Visual separator
+            st.write("### Text Filters")
 
-            # --- NEW: Dropdown for selecting number of rows ---
+            # Create a copy to apply text filters on
+            df_text_filtered = df_filtered.copy()
+
+            # Filter for Departure Cities (only if the column was selected by the user)
+            if "Condition Departure Cities" in df_text_filtered.columns:
+                departure_filter = st.text_input(
+                    "Filter by Departure City (text contains):",
+                    placeholder="e.g., London"
+                )
+                if departure_filter:
+                    # Apply a case-insensitive 'contains' filter. na=False handles missing values gracefully.
+                    df_text_filtered = df_text_filtered[df_text_filtered["Condition Departure Cities"].str.contains(departure_filter, case=False, na=False)]
+
+            # Filter for Arrival Cities (only if the column was selected by the user)
+            if "Condition Arrival Cities" in df_text_filtered.columns:
+                arrival_filter = st.text_input(
+                    "Filter by Arrival City (text contains):",
+                    placeholder="e.g., Paris"
+                )
+                if arrival_filter:
+                    df_text_filtered = df_text_filtered[df_text_filtered["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)]
+            
+            st.write("---") # Visual separator
+            # --- END OF NEW CODE ---
+
+
+            # Dropdown for selecting number of rows, now operates on the text-filtered dataframe
             num_rows = st.selectbox(
                 "Select number of rows to display:",
                 options=[10, 50, 100, "All"],
-                index=0  # Default to the first option, which is 10
+                index=0
             )
 
-            # Dynamically create the title and the DataFrame view based on the selection
+            # Display logic now uses df_text_filtered
             if num_rows == "All":
-                st.write(f"### Displaying All Rows ({len(df_filtered)})")
-                st.dataframe(df_filtered)
+                st.write(f"### Displaying All Matching Rows ({len(df_text_filtered)})")
+                st.dataframe(df_text_filtered)
             else:
-                st.write(f"### First {num_rows} Rows of Selected Data")
-                st.dataframe(df_filtered.head(num_rows))
-            # --- END OF NEW CODE ---
+                st.write(f"### First {num_rows} Matching Rows")
+                st.dataframe(df_text_filtered.head(num_rows))
 
         else:
-            # This message now appears if the user manually unchecks all columns.
             st.warning("Please select at least one column to display.")
