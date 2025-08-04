@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # The main title for the app
-st.write("SearchPattern Updater")
+st.subheader("SearchPattern Updater")
 
 # Use st.file_uploader to create a file upload widget.
 csv_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -17,7 +17,6 @@ if csv_file is not None:
 
     except UnicodeDecodeError:
         # If a decoding error occurs, silently try again with 'latin1'.
-        # The user-facing warning message has been removed from here.
         csv_file.seek(0)
         try:
             df = pd.read_csv(csv_file, encoding='latin1')
@@ -96,10 +95,11 @@ if csv_file is not None:
 
             st.write("---")
 
+            # The default is now the 4th item in the list (index 3), which is "All"
             num_rows = st.selectbox(
                 "Select number of rows to display:",
                 options=[10, 50, 100, "All"],
-                index=0
+                index=3 
             )
 
             if num_rows == "All":
