@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # The main title for the app
-st.write("Hello, Welcome")
+st.write("SearchPattern Updater")
 
 # Use st.file_uploader to create a file upload widget.
 csv_file = st.file_uploader("Choose a CSV file", type="csv")
@@ -45,7 +45,7 @@ if csv_file is not None:
         if selected_columns:
             df_filtered = df[selected_columns]
             
-            # --- NEW: Text-based filters for specific columns ---
+            # --- Text-based filters for specific columns ---
             st.write("---") # Visual separator
             st.write("### Route Filters")
 
@@ -58,9 +58,24 @@ if csv_file is not None:
                     "Filter by Departure City (text contains):",
                     placeholder="e.g., LON"
                 )
+                # --- NEW: Checkbox to include blanks ---
+                show_blanks_departure = st.checkbox(
+                    "Also include rows with a blank Departure City", key="blanks_dep"
+                )
+
                 if departure_filter:
-                    # Apply a case-insensitive 'contains' filter. na=False handles missing values gracefully.
-                    df_text_filtered = df_text_filtered[df_text_filtered["Condition Departure Cities"].str.contains(departure_filter, case=False, na=False)]
+                    # Condition for matching the text
+                    text_match = df_text_filtered["Condition Departure Cities"].str.contains(departure_filter, case=False, na=False)
+                    
+                    if show_blanks_departure:
+                        # Condition for being blank (NaN)
+                        is_blank = df_text_filtered["Condition Departure Cities"].isna()
+                        # Apply the combined OR condition
+                        df_text_filtered = df_text_filtered[text_match | is_blank]
+                    else:
+                        # Apply only the text match condition (original behavior)
+                        df_text_filtered = df_text_filtered[text_match]
+
 
             # Filter for Arrival Cities (only if the column was selected by the user)
             if "Condition Arrival Cities" in df_text_filtered.columns:
@@ -68,12 +83,25 @@ if csv_file is not None:
                     "Filter by Arrival City (text contains):",
                     placeholder="e.g., LIS"
                 )
+                # --- NEW: Checkbox to include blanks ---
+                show_blanks_arrival = st.checkbox(
+                    "Also include rows with a blank Arrival City", key="blanks_arr"
+                )
+
                 if arrival_filter:
-                    df_text_filtered = df_text_filtered[df_text_filtered["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)]
+                    # Condition for matching the text
+                    text_match = df_text_filtered["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)
+
+                    if show_blanks_arrival:
+                        # Condition for being blank (NaN)
+                        is_blank = df_text_filtered["Condition Arrival Cities"].isna()
+                        # Apply the combined OR condition
+                        df_text_filtered = df_text_filtered[text_match | is_blank]
+                    else:
+                        # Apply only the text match condition
+                        df_text_filtered = df_text_filtered[text_match]
             
             st.write("---") # Visual separator
-            # --- END OF NEW CODE ---
-
 
             # Dropdown for selecting number of rows, now operates on the text-filtered dataframe
             num_rows = st.selectbox(
@@ -92,5 +120,3 @@ if csv_file is not None:
 
         else:
             st.warning("Please select at least one column to display.")
-
-
