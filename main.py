@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # The main title for the app
-st.subheader("SearchPattern Updater")
+st.write("SearchPattern Updater")
 
 # Use st.file_uploader to create a file upload widget.
 csv_file = st.file_uploader("Choose a CSV file", type="csv")
