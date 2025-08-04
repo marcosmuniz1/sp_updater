@@ -37,13 +37,21 @@ if csv_file is not None:
         # Get the list of all column names from the DataFrame.
         all_columns = df.columns.tolist()
 
-        # Create a multiselect dropdown for the user to choose columns.
-        # The 'default' argument ensures all columns are selected initially.
-        selected_columns = st.multiselect(
-            "Select columns to display:",
-            options=all_columns,
-            default=all_columns
-        )
+        # --- REPLACEMENT FOR st.multiselect ---
+        # Use an expander to create a dropdown-like container for the checkboxes.
+        # 'expanded=True' makes it open by default.
+        with st.expander("Select columns to display:", expanded=True):
+            # Add a "Select All" checkbox for convenience. Its value determines the default for others.
+            select_all = st.checkbox("Select All", value=True)
+            
+            selected_columns = []
+            # Loop through each column to create a checkbox.
+            for column in all_columns:
+                # The 'value' of each checkbox is controlled by the 'Select All' checkbox.
+                # A unique 'key' is essential for each widget created in a loop.
+                if st.checkbox(column, value=select_all, key=f"col_{column}"):
+                    selected_columns.append(column)
+        # --- END OF REPLACEMENT ---
 
         # Filter the DataFrame to show only the selected columns.
         if selected_columns:
@@ -53,5 +61,5 @@ if csv_file is not None:
             st.write("### First 5 Rows of Selected Data")
             st.dataframe(df_filtered.head(5))
         else:
+            # This message now appears if the user manually unchecks all columns.
             st.warning("Please select at least one column to display.")
-
