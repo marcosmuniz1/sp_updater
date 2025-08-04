@@ -56,7 +56,7 @@ if csv_file is not None:
             if "Condition Departure Cities" in df_text_filtered.columns:
                 departure_filter = st.text_input(
                     "Filter by Departure City (text contains):",
-                    placeholder="e.g., London"
+                    placeholder="e.g., LON"
                 )
                 if departure_filter:
                     # Apply a case-insensitive 'contains' filter. na=False handles missing values gracefully.
@@ -66,7 +66,7 @@ if csv_file is not None:
             if "Condition Arrival Cities" in df_text_filtered.columns:
                 arrival_filter = st.text_input(
                     "Filter by Arrival City (text contains):",
-                    placeholder="e.g., Paris"
+                    placeholder="e.g., LIS"
                 )
                 if arrival_filter:
                     df_text_filtered = df_text_filtered[df_text_filtered["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)]
@@ -92,3 +92,4 @@ if csv_file is not None:
 
         else:
             st.warning("Please select at least one column to display.")
+
