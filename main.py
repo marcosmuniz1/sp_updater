@@ -47,7 +47,7 @@ if csv_file is not None:
             
             # --- NEW: Text-based filters for specific columns ---
             st.write("---") # Visual separator
-            st.write("### Text Filters")
+            st.write("### Route Filters")
 
             # Create a copy to apply text filters on
             df_text_filtered = df_filtered.copy()
@@ -92,4 +92,5 @@ if csv_file is not None:
 
         else:
             st.warning("Please select at least one column to display.")
+
 
