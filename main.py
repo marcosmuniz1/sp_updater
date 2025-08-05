@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+import os
 
 # The main title for the app
 st.header("SearchPattern Updater")
@@ -110,6 +111,3 @@ if csv_file is not None:
 
         else:
             st.warning("Please select at least one column to display.")
-
-
-
