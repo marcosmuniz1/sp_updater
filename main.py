@@ -30,7 +30,7 @@ def aggregate_routes(uploaded_file) -> pd.DataFrame:
 
 
 # --- APP LAYOUT ---
-st.header("SearchPattern Updater")
+st.header("SearchPattern Viewer")
 st.markdown(
     "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
     "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
@@ -71,6 +71,8 @@ if df_sp is not None:
     query_id = None
     if aggregated_df is not None and not aggregated_df.empty:
         query_id = st.text_input("Filter by Product ID (optional):")
+        # --- NEW: Disclaimer text added below the Product ID filter ---
+        st.caption("Just filtering by Product IDs does not guarantee results only limited to the IDs Market")
     
     # Text-based content filters
     departure_filter = st.text_input("Filter by Departure City (text contains):", placeholder="e.g., LON")
