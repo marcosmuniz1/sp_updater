@@ -2,33 +2,21 @@ import streamlit as st
 import pandas as pd
 import os
 
-# The main title for the app
-st.header("SearchPattern Updater")
-
-st.markdown(
-    "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
-    "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
-)
-
-# --- FUNCTION DEFINITION ---
+# --- FUNCTION DEFINITION (UNCHANGED) ---
 @st.cache_data
 def aggregate_routes(uploaded_file) -> pd.DataFrame:
-    """
-    Loads flight data from an uploaded file, groups by route, and aggregates product IDs.
-    """
+    # ... (function code is exactly the same as before, so it's omitted for brevity)
     try:
         df = pd.read_csv(uploaded_file)
         required_cols = ['fpc_reference_product_id', 'fpc_iata_departure', 'fpc_iata_arrival', 'fpc_iata_return']
         if not all(col in df.columns for col in required_cols):
             st.error(f"Error: The uploaded Product IDs file is missing one or more required columns: {required_cols}")
             return pd.DataFrame()
-
         df['fpc_reference_product_id'] = df['fpc_reference_product_id'].astype(str)
         route_columns = ['fpc_iata_departure', 'fpc_iata_arrival', 'fpc_iata_return']
         aggregated_data = df.groupby(route_columns)['fpc_reference_product_id'].apply(
             lambda ids: ';'.join(ids.unique())
         ).reset_index()
-
         aggregated_data['route'] = aggregated_data[route_columns].apply(
             lambda row: '-'.join(row.values.astype(str)),
             axis=1
@@ -41,94 +29,118 @@ def aggregate_routes(uploaded_file) -> pd.DataFrame:
         return pd.DataFrame()
 
 
+# --- APP LAYOUT ---
+st.header("SearchPattern Updater")
+st.markdown(
+    "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
+    "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
+)
+
 # --- FILE UPLOADERS ---
 searchpatterns_csv = st.file_uploader(
-    "1. Upload Search Patterns File (CSV)", 
-    type="csv", 
-    key="uploader1"
+    "1. Upload Search Patterns File (CSV)", type="csv", key="uploader1"
 )
-
 productid_csv = st.file_uploader(
-    "2. Upload Product IDs File (CSV)", 
-    type="csv", 
-    key="uploader2"
+    "2. Upload Product IDs File (CSV)", type="csv", key="uploader2"
 )
 
-# Initialize DataFrames to None, they will be populated when files are uploaded
+# Initialize DataFrames
 df_sp = None
 aggregated_df = None
 
-# --- PROCESS THE SEARCH PATTERNS FILE ---
-if searchpatterns_csv is not None:
+# --- DATA LOADING ---
+# Load Search Patterns file if uploaded
+if searchpatterns_csv:
     try:
-        # We read the main Search Patterns DF here
         df_sp = pd.read_csv(searchpatterns_csv)
-        st.success("Search Patterns file uploaded successfully!")
     except Exception as e:
         st.error(f"Error reading Search Patterns file: {e}")
-        df_sp = None
 
-    # This block for filtering the search patterns file runs independently
-    if df_sp is not None:
-        st.write("---") 
-        st.write("### Filter Search Patterns File")
-        df_content_filtered = df_sp.copy()
-        # (Filtering logic as it was before, for Departure, Arrival, Provider...)
-        # ... this part is untouched ...
+# Load and process Product IDs file if uploaded
+if productid_csv:
+    aggregated_df = aggregate_routes(productid_csv)
 
-
-# --- PROCESS THE PRODUCT IDS FILE ---
-if productid_csv is not None:
-    with st.spinner('Aggregating routes from Product IDs file...'):
-        # We process the second file and create the aggregated_df here
-        aggregated_df = aggregate_routes(productid_csv)
-    
-    if not aggregated_df.empty:
-        st.success("Product IDs file processed successfully.")
-    else:
-        st.warning("Product IDs file was processed, but the resulting aggregation is empty.")
-
-
-# --- NEW: COMBINED ANALYSIS SECTION ---
-# This entire section will only appear if BOTH files have been successfully processed.
-if df_sp is not None and aggregated_df is not None and not aggregated_df.empty:
+# --- UNIFIED FILTERING AND DISPLAY LOGIC ---
+# This main block only runs if the primary Search Patterns file is loaded.
+if df_sp is not None:
     st.write("---")
-    st.header("Find Search Patterns by Product ID")
+    st.header("Combined Filters")
 
-    query_id = st.text_input("Enter a Product ID to find related Search Patterns:")
+    # --- DEFINE ALL FILTER WIDGETS ---
+    # The Product ID search is now just another filter
+    query_id = None
+    if aggregated_df is not None and not aggregated_df.empty:
+        query_id = st.text_input("Filter by Product ID (optional):")
+    
+    # Text-based content filters
+    departure_filter = st.text_input("Filter by Departure City (text contains):", placeholder="e.g., LON")
+    show_blanks_departure = st.checkbox("Also include rows with a blank Departure City", key="blanks_dep")
+    
+    arrival_filter = st.text_input("Filter by Arrival City (text contains):", placeholder="e.g., LIS")
+    show_blanks_arrival = st.checkbox("Also include rows with a blank Arrival City", key="blanks_arr")
+    
+    provider_filter = st.text_input("Filter by Provider Name (text contains):", placeholder="e.g., Lufthansa")
 
+    # --- APPLY FILTERS SEQUENTIALLY ---
+    # Start with a full copy of the data. This will be progressively filtered.
+    working_df = df_sp.copy()
+
+    # 1. Apply Product ID filter first (if used). This significantly narrows the search space.
     if query_id:
-        with st.spinner(f"Searching for patterns related to Product ID: {query_id}..."):
-            # --- This is the exact logic you provided, integrated into the app ---
-
-            # 1. Find all routes containing the product ID.
+        with st.spinner(f"Finding patterns for Product ID {query_id}..."):
             id_route_list = aggregated_df[aggregated_df['product_ids'].str.contains(query_id, na=False)].route.unique()
-
-            if len(id_route_list) == 0:
-                st.warning(f"No routes found for Product ID '{query_id}'.")
-            else:
-                st.info(f"Found {len(id_route_list)} route(s) associated with Product ID '{query_id}'. Now finding matching search patterns...")
-                
-                # 2. Loop through routes and append filtered DataFrames to the list
+            if len(id_route_list) > 0:
                 results_list = []
                 for id_route in id_route_list:
-                    c1 = id_route[:3]
-                    c2 = id_route[4:7]
-                    c3 = id_route[8:]
-
+                    c1, c2, c3 = id_route[:3], id_route[4:7], id_route[8:]
                     cond1 = (df_sp['Condition Departure Cities'].isna()) | (df_sp['Condition Departure Cities'].str.contains(c1, na=False, case=False))
                     cond2 = (df_sp['Condition Arrival Cities'].isna()) | (df_sp['Condition Arrival Cities'].str.contains(c2, na=False, case=False))
                     cond3 = (df_sp['Condition Departure Cities'].isna()) | (df_sp['Condition Departure Cities'].str.contains(c3, na=False, case=False))
-
-                    filtered_chunk = df_sp[cond1 & cond2 & cond3]
-                    results_list.append(filtered_chunk)
-
-                # 3. After the loop, concatenate and drop duplicates.
+                    results_list.append(df_sp[cond1 & cond2 & cond3])
+                
                 if results_list:
-                    combined_sp = pd.concat(results_list, ignore_index=True)
-                    applicable_sp = combined_sp.drop_duplicates()
-                    
-                    st.success(f"Found {len(applicable_sp)} unique Search Pattern(s):")
-                    st.dataframe(applicable_sp)
+                    # This becomes the new base DataFrame for further filtering
+                    working_df = pd.concat(results_list, ignore_index=True).drop_duplicates()
                 else:
-                    st.warning("Found associated routes, but no matching search patterns exist in the uploaded file.")
+                    working_df = pd.DataFrame(columns=df_sp.columns) # No results, create empty df
+            else:
+                st.warning(f"No routes found for Product ID '{query_id}'. Displaying results for other filters only.")
+                working_df = pd.DataFrame(columns=df_sp.columns) # No results, create empty df
+
+    # 2. Apply text-based filters on the (potentially already filtered) working_df
+    if departure_filter:
+        text_match = working_df["Condition Departure Cities"].str.contains(departure_filter, case=False, na=False)
+        if show_blanks_departure:
+            is_blank = working_df["Condition Departure Cities"].isna()
+            working_df = working_df[text_match | is_blank]
+        else:
+            working_df = working_df[text_match]
+
+    if arrival_filter:
+        text_match = working_df["Condition Arrival Cities"].str.contains(arrival_filter, case=False, na=False)
+        if show_blanks_arrival:
+            is_blank = working_df["Condition Arrival Cities"].isna()
+            working_df = working_df[text_match | is_blank]
+        else:
+            working_df = working_df[text_match]
+            
+    if provider_filter:
+        working_df = working_df[working_df["Provider Name"].str.contains(provider_filter, case=False, na=False)]
+
+    # --- DISPLAY FINAL, COMBINED RESULT ---
+    st.write("---")
+    st.header("Filtered Results")
+    st.info(f"Displaying **{len(working_df)}** matching rows.")
+
+    # Column selection (operates on the original columns, but displays data from working_df)
+    with st.expander("Select columns to display:", expanded=True):
+        all_columns = df_sp.columns.tolist()
+        select_all = st.checkbox("Select All", value=True)
+        selected_columns = [col for col in all_columns if st.checkbox(col, value=select_all, key=f"col_{col}")]
+
+    if selected_columns:
+        # Ensure selected columns exist in the final dataframe before displaying
+        display_cols = [col for col in selected_columns if col in working_df.columns]
+        st.dataframe(working_df[display_cols])
+    else:
+        st.warning("Please select at least one column to display.")
