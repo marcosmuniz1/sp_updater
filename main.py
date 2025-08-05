@@ -3,7 +3,7 @@ import pandas as pd
 import os
 
 # The main title for the app
-st.header("SearchPattern Updater")
+st.header("SearchPattern Viewer")
 
 # --- NEW: Added descriptive text with a clickable link below the header ---
 st.markdown(
@@ -149,3 +149,4 @@ if productid_csv is not None:
     if df_prod is not None:
         st.success("Product IDs file uploaded successfully!")
         st.dataframe(df_prod.head())
+
