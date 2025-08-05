@@ -30,7 +30,7 @@ def aggregate_routes(uploaded_file) -> pd.DataFrame:
 
 
 # --- APP LAYOUT ---
-st.header("SearchPattern Updater")
+st.header("SearchPattern Viewer")
 st.markdown(
     "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
     "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
@@ -155,3 +155,4 @@ if df_sp is not None:
         st.dataframe(working_df[display_cols])
     else:
         st.warning("Please select at least one column to display.")
+
