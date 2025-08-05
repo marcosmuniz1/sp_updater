@@ -81,6 +81,9 @@ if df_sp is not None:
     
     provider_filter = st.text_input("Filter by Provider Name (text contains):", placeholder="e.g., Lufthansa")
 
+    operating_country_filter = st.text_input("Filter by Operating Country (text contains):", placeholder="e.g., DE")
+    show_blanks_country = st.checkbox("Also include rows with a blank Operating Country", key="blanks_country")
+
     # --- APPLY FILTERS SEQUENTIALLY ---
     # Start with a full copy of the data. This will be progressively filtered.
     working_df = df_sp.copy()
@@ -126,6 +129,14 @@ if df_sp is not None:
             
     if provider_filter:
         working_df = working_df[working_df["Provider Name"].str.contains(provider_filter, case=False, na=False)]
+    
+    if operating_country_filter and "Condition Operating Country" in working_df.columns:
+        text_match = working_df["Condition Operating Country"].str.contains(operating_country_filter, case=False, na=False)
+        if show_blanks_country:
+            is_blank = working_df["Condition Operating Country"].isna()
+            working_df = working_df[text_match | is_blank]
+        else:
+            working_df = working_df[text_match]
 
     # --- DISPLAY FINAL, COMBINED RESULT ---
     st.write("---")
