@@ -71,6 +71,8 @@ if df_sp is not None:
     query_id = None
     if aggregated_df is not None and not aggregated_df.empty:
         query_id = st.text_input("Filter by Product ID (optional):")
+        # --- NEW: Disclaimer text added below the Product ID filter ---
+        st.caption("Just filtering by Product IDs does not guarantee results only limited to the IDs Market")
     
     # Text-based content filters
     departure_filter = st.text_input("Filter by Departure City (text contains):", placeholder="e.g., LON")
@@ -155,4 +157,3 @@ if df_sp is not None:
         st.dataframe(working_df[display_cols])
     else:
         st.warning("Please select at least one column to display.")
-
