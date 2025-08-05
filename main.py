@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 
 # The main title for the app
-st.write("SearchPattern Updater")
+st.head("SearchPattern Updater")
 
 # Use st.file_uploader to create a file upload widget.
 csv_file = st.file_uploader("Upload Searchpattern File (CSV)", type="csv")
@@ -110,4 +110,5 @@ if csv_file is not None:
 
         else:
             st.warning("Please select at least one column to display.")
+
 
