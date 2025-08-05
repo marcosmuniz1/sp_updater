@@ -5,39 +5,57 @@ import os
 # The main title for the app
 st.header("SearchPattern Updater")
 
-# Use st.file_uploader to create a file upload widget.
-csv_file = st.file_uploader("Upload Searchpattern File (CSV)", type="csv")
+# --- NEW: Added descriptive text with a clickable link below the header ---
+st.markdown(
+    "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
+    "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
+)
 
-# Check if a file has been uploaded
-if csv_file is not None:
-    df = None
-    # Attempt to read the file, trying different encodings if the default fails.
+
+# --- FILE UPLOADERS ---
+# Renamed variables and updated labels for clarity.
+searchpatterns_csv = st.file_uploader(
+    "1. Upload Search Patterns File (CSV)", 
+    type="csv", 
+    key="uploader1"
+)
+
+productid_csv = st.file_uploader(
+    "2. Upload Product IDs File (Optional)", 
+    type="csv", 
+    key="uploader2"
+)
+
+
+# --- PROCESS THE SEARCH PATTERNS FILE ---
+if searchpatterns_csv is not None:
+    # Renamed DataFrame to df_sp (for Search Patterns)
+    df_sp = None
+    # Attempt to read the file
     try:
-        df = pd.read_csv(csv_file)
+        df_sp = pd.read_csv(searchpatterns_csv)
     except UnicodeDecodeError:
-        csv_file.seek(0)
+        searchpatterns_csv.seek(0)
         try:
-            df = pd.read_csv(csv_file, encoding='latin1')
+            df_sp = pd.read_csv(searchpatterns_csv, encoding='latin1')
         except Exception as e:
-            st.error(f"Error: Unable to read the CSV file with 'latin1' encoding either. Details: {e}")
-            df = None
+            st.error(f"Error: Unable to read the Search Patterns CSV file with 'latin1' encoding either. Details: {e}")
+            df_sp = None
     except Exception as e:
-        st.error(f"Error: Unable to read the CSV file. Details: {e}")
-        df = None
+        st.error(f"Error: Unable to read the Search Patterns CSV file. Details: {e}")
+        df_sp = None
 
-    if df is not None:
-        st.success("File uploaded successfully!")
-        
-        # --- LOGIC REORDERED: FILTERS NOW COME FIRST ---
+    if df_sp is not None:
+        st.success("Search Patterns file uploaded successfully!")
         
         st.write("---") 
-        st.write("### Content Filters")
+        st.write("### Content Filters for Search Patterns File")
 
         # Start with a copy of the original DataFrame to apply filters to.
-        df_content_filtered = df.copy()
+        df_content_filtered = df_sp.copy()
 
-        # Filter for Departure Cities (checks against original df)
-        if "Condition Departure Cities" in df.columns:
+        # Filter for Departure Cities
+        if "Condition Departure Cities" in df_sp.columns:
             departure_filter = st.text_input(
                 "Filter by Departure City (text contains):",
                 placeholder="e.g., LON"
@@ -53,8 +71,8 @@ if csv_file is not None:
                 else:
                     df_content_filtered = df_content_filtered[text_match]
 
-        # Filter for Arrival Cities (checks against original df)
-        if "Condition Arrival Cities" in df.columns:
+        # Filter for Arrival Cities
+        if "Condition Arrival Cities" in df_sp.columns:
             arrival_filter = st.text_input(
                 "Filter by Arrival City (text contains):",
                 placeholder="e.g., LIS"
@@ -70,8 +88,8 @@ if csv_file is not None:
                 else:
                     df_content_filtered = df_content_filtered[text_match]
         
-        # Filter for Provider Name (checks against original df)
-        if "Provider Name" in df.columns:
+        # Filter for Provider Name
+        if "Provider Name" in df_sp.columns:
             provider_filter = st.text_input(
                 "Filter by Provider Name (text contains):",
                 placeholder="e.g., Lufthansa"
@@ -79,8 +97,8 @@ if csv_file is not None:
             if provider_filter:
                 df_content_filtered = df_content_filtered[df_content_filtered["Provider Name"].str.contains(provider_filter, case=False, na=False)]
 
-        # --- NOW, SELECT COLUMNS FROM THE ALREADY-FILTERED DATA ---
-        all_columns = df.columns.tolist()
+        # Select columns to display
+        all_columns = df_sp.columns.tolist()
         with st.expander("Select columns to display:", expanded=True):
             select_all = st.checkbox("Select All", value=True)
             
@@ -89,9 +107,8 @@ if csv_file is not None:
                 if st.checkbox(column, value=select_all, key=f"col_{column}"):
                     selected_columns.append(column)
 
-        # --- FINALLY, CREATE THE DISPLAY VIEW ---
+        # Create the final display view
         if selected_columns:
-            # Create the final view by selecting columns from the content-filtered data
             df_display = df_content_filtered[selected_columns]
 
             st.write("---")
@@ -108,6 +125,27 @@ if csv_file is not None:
             else:
                 st.write(f"### First {num_rows} Matching Rows")
                 st.dataframe(df_display.head(num_rows))
-
         else:
             st.warning("Please select at least one column to display.")
+
+
+# --- PROCESS THE PRODUCT IDS FILE ---
+if productid_csv is not None:
+    st.write("---")
+    st.write("### Product IDs File Preview")
+    # Renamed DataFrame to df_prod (for Product IDs)
+    df_prod = None
+    try:
+        df_prod = pd.read_csv(productid_csv)
+    except UnicodeDecodeError:
+        productid_csv.seek(0)
+        try:
+            df_prod = pd.read_csv(productid_csv, encoding='latin1')
+        except Exception as e:
+            st.error(f"Error reading the Product IDs CSV file: {e}")
+    except Exception as e:
+        st.error(f"Error reading the Product IDs CSV file: {e}")
+
+    if df_prod is not None:
+        st.success("Product IDs file uploaded successfully!")
+        st.dataframe(df_prod.head())
