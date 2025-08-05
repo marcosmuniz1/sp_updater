@@ -3,17 +3,59 @@ import pandas as pd
 import os
 
 # The main title for the app
-st.header("SearchPattern Viewer")
+st.header("SearchPattern Updater")
 
-# --- NEW: Added descriptive text with a clickable link below the header ---
 st.markdown(
     "Upload the SP and SKU files for processing. You can find the latest uploaded versions at "
     "[https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r](https://drive.google.com/drive/folders/1hrbWrcEeMjoWrRdZdBhZcvRdLqofru8r)"
 )
 
+# --- FUNCTION DEFINITION ---
+# Place the function here and add the @st.cache_data decorator.
+@st.cache_data
+def aggregate_routes(uploaded_file) -> pd.DataFrame:
+    """
+    Loads flight data from an uploaded file, groups by route, and aggregates product IDs.
+    """
+    try:
+        df = pd.read_csv(uploaded_file)
+        required_cols = ['fpc_reference_product_id', 'fpc_iata_departure', 'fpc_iata_arrival', 'fpc_iata_return']
+        if not all(col in df.columns for col in required_cols):
+            st.error(f"Error: The uploaded Product IDs file is missing one or more required columns: {required_cols}")
+            return pd.DataFrame()
+
+        # Ensure the product ID column is treated as a string for aggregation.
+        df['fpc_reference_product_id'] = df['fpc_reference_product_id'].astype(str)
+
+        # Define the columns that constitute a unique route.
+        route_columns = ['fpc_iata_departure', 'fpc_iata_arrival', 'fpc_iata_return']
+
+        # Group by the unique route combination and aggregate the product IDs.
+        aggregated_data = df.groupby(route_columns)['fpc_reference_product_id'].apply(
+            lambda ids: ';'.join(ids.unique())
+        ).reset_index()
+
+        # For clarity, create a single 'route' column by joining the IATA codes.
+        aggregated_data['route'] = aggregated_data[route_columns].apply(
+            lambda row: '-'.join(row.values.astype(str)),
+            axis=1
+        )
+
+        # Rename the aggregated product ID column for clarity.
+        aggregated_data.rename(columns={'fpc_reference_product_id': 'product_ids'}, inplace=True)
+
+        # Select and reorder the final columns for the output.
+        final_df = aggregated_data[['route', 'product_ids'] + route_columns]
+
+        return final_df
+
+    except Exception as e:
+        # Use st.error to display errors in the Streamlit UI
+        st.error(f"An unexpected error occurred during aggregation: {e}")
+        return pd.DataFrame()
+
 
 # --- FILE UPLOADERS ---
-# Renamed variables and updated labels for clarity.
 searchpatterns_csv = st.file_uploader(
     "1. Upload Search Patterns File (CSV)", 
     type="csv", 
@@ -21,7 +63,7 @@ searchpatterns_csv = st.file_uploader(
 )
 
 productid_csv = st.file_uploader(
-    "2. Upload Product IDs File (Optional)", 
+    "2. Upload Product IDs File (CSV)", 
     type="csv", 
     key="uploader2"
 )
@@ -132,21 +174,30 @@ if searchpatterns_csv is not None:
 # --- PROCESS THE PRODUCT IDS FILE ---
 if productid_csv is not None:
     st.write("---")
-    st.write("### Product IDs File Preview")
-    # Renamed DataFrame to df_prod (for Product IDs)
-    df_prod = None
-    try:
-        df_prod = pd.read_csv(productid_csv)
-    except UnicodeDecodeError:
-        productid_csv.seek(0)
-        try:
-            df_prod = pd.read_csv(productid_csv, encoding='latin1')
-        except Exception as e:
-            st.error(f"Error reading the Product IDs CSV file: {e}")
-    except Exception as e:
-        st.error(f"Error reading the Product IDs CSV file: {e}")
+    st.write("### Product IDs File Processing")
+    
+    # Use a spinner to provide feedback during the computation
+    with st.spinner('Aggregating routes... This may take a moment.'):
+        # Call the cached function with the uploaded file object
+        aggregated_df = aggregate_routes(productid_csv)
 
-    if df_prod is not None:
-        st.success("Product IDs file uploaded successfully!")
-        st.dataframe(df_prod.head())
+    # Display the results after the spinner is done
+    if not aggregated_df.empty:
+        st.success("No issues when aggregating Product IDs")
+        
+        # Optional: Add a download button for the result
+        @st.cache_data
+        def convert_df_to_csv(df):
+            return df.to_csv(index=False).encode('utf-8')
 
+        csv_output = convert_df_to_csv(aggregated_df)
+        
+        st.download_button(
+           label="Download Aggregated Data as CSV",
+           data=csv_output,
+           file_name='aggregated_routes.csv',
+           mime='text/csv',
+        )
+    else:
+        # This message will show if the function returned an error or an empty result
+        st.warning("Aggregation resulted in an empty table.")
