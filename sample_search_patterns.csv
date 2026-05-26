@@ -1,0 +1,26 @@
+Pattern ID,Pattern Name,Provider Name,Condition Departure Cities,Condition Arrival Cities,Condition Operating Country,Cabin Class,Min Stay (days),Max Stay (days),Status,Last Updated
+SP-001,UK to Iberia Standard,Lufthansa,LON;MAN;EDI,LIS;BCN;MAD,GB,Economy,3,14,Active,2025-01-15
+SP-002,UK to Iberia Premium,British Airways,LON,LIS;BCN;MAD,GB,Business,2,21,Active,2025-02-10
+SP-003,France to Iberia,Air France,PAR,LIS;BCN;MAD,FR,Economy,3,14,Active,2025-01-20
+SP-004,Germany to Iberia,Lufthansa,FRA;MUC,LIS;BCN;MAD,DE,Economy,2,10,Active,2025-03-01
+SP-005,Germany Premium,Lufthansa,FRA;MUC,BCN;MAD,DE,Business,3,14,Active,2025-03-05
+SP-006,Netherlands to South,KLM,AMS,LIS;BCN;MAD;FCO,NL,Economy,4,15,Active,2025-02-22
+SP-007,Ireland to Iberia,Aer Lingus,DUB,LIS;BCN,IE,Economy,5,12,Active,2025-01-30
+SP-008,UK to Italy Standard,British Airways,LON,FCO;MXP,GB,Economy,3,14,Active,2025-02-05
+SP-009,Generic Europe Sale,Ryanair,,LIS;BCN;MAD;FCO,,Economy,2,7,Active,2025-03-10
+SP-010,Greece Specials,Aegean Airlines,LON;PAR;FRA,ATH,,Economy,4,14,Active,2025-01-08
+SP-011,UK to USA East Coast,Virgin Atlantic,LON,JFK;BOS;MIA,GB,Economy,5,21,Active,2025-02-18
+SP-012,UK to USA Premium,British Airways,LON,JFK;LAX,GB,Business,5,28,Active,2025-02-20
+SP-013,France to USA,Air France,PAR,JFK;LAX,FR,Economy,5,21,Active,2025-01-25
+SP-014,Germany to USA,Lufthansa,FRA,JFK;LAX,DE,Economy,5,21,Active,2025-03-02
+SP-015,Netherlands to USA,KLM,AMS,JFK,NL,Economy,5,21,Active,2025-02-28
+SP-016,UK to Middle East,Emirates,LON,DXB,GB,Economy,4,14,Active,2025-01-12
+SP-017,Europe to Middle East,Emirates,LON;PAR;FRA;AMS,DXB,,Business,4,14,Active,2025-02-14
+SP-018,UK to Far East,Cathay Pacific,LON,HKG;BKK;SIN;NRT,GB,Economy,7,21,Active,2025-03-08
+SP-019,UK to Japan,Japan Airlines,LON,NRT,GB,Business,7,21,Active,2025-02-25
+SP-020,Europe to Thailand,Thai Airways,LON;FRA,BKK,,Economy,7,28,Active,2025-01-18
+SP-021,Wildcard Departure Promo,Ryanair,,BCN,ES,Economy,2,7,Inactive,2024-12-15
+SP-022,Wildcard Arrival Promo,easyJet,LON,,GB,Economy,2,7,Active,2025-03-12
+SP-023,Open Skies Bundle,Multiple Carriers,,,,Economy,3,14,Active,2025-01-05
+SP-024,Heathrow Outbound Only,British Airways,LON,LIS;BCN;MAD;FCO;ATH,GB,Premium Economy,3,14,Active,2025-02-08
+SP-025,Frankfurt Hub Outbound,Lufthansa,FRA,LIS;BCN;MAD;FCO;ATH;JFK;DXB,DE,Economy,3,21,Active,2025-03-04
