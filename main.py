@@ -5,7 +5,6 @@ import os
 # --- FUNCTION DEFINITION (UNCHANGED) ---
 @st.cache_data
 def aggregate_routes(uploaded_file) -> pd.DataFrame:
-    # ... (function code is exactly the same as before, so it's omitted for brevity)
     try:
         df = pd.read_csv(uploaded_file)
         required_cols = ['fpc_reference_product_id', 'fpc_iata_departure', 'fpc_iata_arrival', 'fpc_iata_return']
